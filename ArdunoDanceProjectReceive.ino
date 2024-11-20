@@ -2,6 +2,7 @@
   Recieves the count from the sender arduino and prints it to the LED matrix
   Made from Arduino MQTT Client Simple Recieve Demo
   Arduino Dance Project
+  V2 now activates viboratctors base don the axis value
   Jacob Smith
   8/20/24
 */
@@ -37,12 +38,44 @@ MqttClient mqttClient(wifiClient);
 
 const char broker[] = "test.mosquitto.org";
 int        port     = 1883;
-const char topic[]  = "arduino/simple";
+const char topic[]  = "arduino/simple2";
 
 #include "ArduinoGraphics.h"
 #include "Arduino_LED_Matrix.h"
 	
 ArduinoLEDMatrix matrix;
+
+int X_PIN=0;
+int Y_PIN=1;
+int Z_PIN=2;
+
+
+void print_text(String text){
+  Serial.println(text);
+  long length=text.length();
+  while (length<4){
+    text+=" ";
+    length++;
+  }
+ // Make it scroll!
+//  matrix.beginDraw();
+//  matrix.stroke(0xFFFFFFFF);
+// matrix.beginText(0, 1, 0xFFFFFF);
+// matrix.println(text);
+// matrix.endText(SCROLL_LEFT);
+// matrix.endDraw();
+// non scrolling
+  matrix.beginDraw();
+  matrix.stroke(0xFFFFFFFF);
+  matrix.beginText(0, 1, 0xFFFFFF);
+  matrix.println(text);
+  matrix.endText();
+  matrix.endDraw();
+  //delay(100);
+  pinMode(X_PIN, OUTPUT);
+  pinMode(Y_PIN, OUTPUT);
+  pinMode(Z_PIN, OUTPUT);
+}
 
 void setup() {
   matrix.begin();
@@ -91,7 +124,7 @@ void setup() {
 
   print_text("read");
 }
-
+float message_float;
 void loop() {
   int messageSize = mqttClient.parseMessage();
   if (messageSize) {
@@ -112,31 +145,26 @@ void loop() {
       Serial.print(character);
     }
     Serial.println();
-    print_text(message);
+    Serial.println("message is\t");
+    Serial.println(message);
+    Serial.println("message as a float");
+    message_float=message.toFloat();
+    message_float/=10;
+    Serial.println(message_float);
+    if (message_float<-45){
+      digitalWrite(X_PIN, HIGH);
+    }else{
+    digitalWrite(X_PIN, LOW);
+    }
+
+    if (message_float>45){
+      digitalWrite(Y_PIN, HIGH);   
+    }else{
+      digitalWrite(Y_PIN, LOW); 
+    } 
+    delay(100);
+    //print_text(message);
   }
 }
 
-void print_text(String text){
-  Serial.println(text);
-  long length=text.length();
-  while (length<4){
-    text+=" ";
-    length++;
-  }
- // Make it scroll!
-//  matrix.beginDraw();
-//  matrix.stroke(0xFFFFFFFF);
-// matrix.beginText(0, 1, 0xFFFFFF);
-// matrix.println(text);
-// matrix.endText(SCROLL_LEFT);
-// matrix.endDraw();
-// non scrolling
-  matrix.beginDraw();
-  matrix.stroke(0xFFFFFFFF);
-  matrix.beginText(0, 1, 0xFFFFFF);
-  matrix.println(text);
-  matrix.endText();
-  matrix.endDraw();
-  //delay(100);
 
-}
