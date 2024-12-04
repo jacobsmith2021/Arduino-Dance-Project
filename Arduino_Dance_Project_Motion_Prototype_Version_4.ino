@@ -260,6 +260,7 @@ void loop() {
       Serial.print("received message size:\t");
       Serial.print(messageSize);
       Serial.print("\t");
+      message="";
       while (mqttClient.available()) {
         character=char((mqttClient.read()));
         message+=character;
